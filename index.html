@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لعبة مستكشفات السلاسل الغذائية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+/* ===== عدّلي هنا بيانات المعلمة والمدرسة ===== */
+:root{
+  --green:#2e8b57; --green-d:#1f6b42; --green-l:#e7f6ec;
+  --sun:#f6b93b; --sun-l:#fff6df;
+  --sky:#3b9ad9; --sky-l:#e6f3fc;
+  --earth:#8d5a3b; --earth-l:#f5ebe4;
+  --red:#e05656; --red-l:#fdeaea;
+  --ink:#24323b; --muted:#6b7a85; --card:#ffffff; --bg:#f3f8f2;
+  --r:18px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:'Tajawal',system-ui,sans-serif;color:var(--ink);
+  background:linear-gradient(180deg,#dff1fb 0%,#f3f8f2 35%,#eaf5e4 100%);min-height:100vh}
+.wrap{max-width:860px;margin:0 auto;padding:16px 14px 40px}
+header.top{background:linear-gradient(135deg,var(--green),#3aa36b);color:#fff;border-radius:22px;padding:16px 18px;
+  display:flex;align-items:center;gap:14px;box-shadow:0 8px 24px rgba(46,139,87,.25);flex-wrap:wrap}
+header.top .logo{font-size:42px;line-height:1}
+header.top h1{margin:0;font-size:24px;font-weight:800}
+header.top .meta{font-size:14px;opacity:.95;margin-top:3px}
+.stars{margin-inline-start:auto;background:rgba(255,255,255,.18);border-radius:14px;padding:8px 14px;font-weight:800;font-size:20px;white-space:nowrap}
+.progress{display:flex;gap:6px;margin:14px 0 4px}
+.progress span{flex:1;height:8px;border-radius:8px;background:#d7e6d9}
+.progress span.on{background:var(--sun)}
+.progress span.done{background:var(--green)}
+.card{background:var(--card);border-radius:var(--r);padding:20px;margin-top:14px;box-shadow:0 4px 18px rgba(0,0,0,.06)}
+.hidden{display:none!important}
+h2{margin:0 0 6px;font-size:22px;color:var(--green-d)}
+.hint{color:var(--muted);margin:0 0 14px;font-size:16px}
+.q-big{font-size:18px;font-weight:700;background:var(--sun-l);border-radius:14px;padding:12px 14px;margin:10px 0;border-inline-start:5px solid var(--sun)}
+button{font-family:inherit;cursor:pointer;border:none}
+.btn{background:var(--green);color:#fff;font-size:18px;font-weight:700;padding:12px 26px;border-radius:14px;box-shadow:0 4px 0 var(--green-d);transition:transform .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--green-d)}
+.btn.sun{background:var(--sun);color:#4a3200;box-shadow:0 4px 0 #c98e14}
+.btn.ghost{background:#eef3ef;color:var(--ink);box-shadow:0 4px 0 #cdd8cf}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.center{text-align:center}
+input.name{font-family:inherit;font-size:20px;padding:12px 16px;border-radius:14px;border:2px solid #cfe2d4;width:100%;max-width:340px;text-align:center}
+input.name:focus{outline:none;border-color:var(--green)}
+.feedback{min-height:28px;font-weight:700;margin-top:10px;font-size:17px}
+.ok{color:var(--green)} .bad{color:var(--red)}
+.chain-art{font-size:34px;letter-spacing:4px;margin:10px 0 4px}
+
+/* Stage 1 matching */
+.match{display:grid;grid-template-columns:1fr 1.6fr;gap:12px}
+.col{display:flex;flex-direction:column;gap:10px}
+.tile{background:#f4f8f5;border:2px solid #d9e7dc;border-radius:14px;padding:12px;font-size:16px;font-weight:600;text-align:center;min-height:56px;display:flex;align-items:center;justify-content:center;transition:all .15s;color:var(--ink)}
+.tile.term{background:var(--sky-l);border-color:#bcdcf2;font-weight:800;font-size:18px}
+.tile.sel{border-color:var(--sun);background:var(--sun-l);transform:scale(1.03)}
+.tile.done{background:var(--green-l);border-color:var(--green);color:var(--green-d);opacity:.75;pointer-events:none}
+.tile.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-4px)}}
+
+/* Stage 2 word search */
+.ws-box{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;width:min(100%,380px)}
+.cell{aspect-ratio:1;background:#f4f8f5;border:2px solid #d9e7dc;border-radius:10px;font-size:22px;font-weight:800;display:flex;align-items:center;justify-content:center;color:var(--ink)}
+.cell.sel{background:var(--sun-l);border-color:var(--sun)}
+.cell.found{background:var(--green);border-color:var(--green-d);color:#fff}
+.words{display:flex;flex-direction:column;gap:8px;min-width:150px}
+.word{background:#f4f8f5;border-radius:12px;padding:8px 12px;font-weight:700;font-size:17px}
+.word.found{background:var(--green-l);color:var(--green-d);text-decoration:line-through}
+
+/* Stage 3 true false */
+.race{display:flex;align-items:center;gap:8px;margin:6px 0 14px}
+.track{flex:1;height:14px;background:#e6eee8;border-radius:10px;position:relative;overflow:hidden}
+.track i{position:absolute;inset-block:0;inset-inline-start:0;background:linear-gradient(90deg,var(--sun),#ffd56b);border-radius:10px;transition:width .4s}
+.tf{display:flex;gap:12px;justify-content:center;margin-top:12px}
+.tf button{font-size:20px;font-weight:800;padding:14px 30px;border-radius:16px;color:#fff}
+.tf .t{background:var(--green);box-shadow:0 4px 0 var(--green-d)}
+.tf .f{background:var(--red);box-shadow:0 4px 0 #b13b3b}
+.tf button:disabled{opacity:.45}
+
+/* Stage 4 sorting */
+.pool{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;min-height:60px;margin-bottom:16px}
+.chip{background:#fff;border:2px solid #d9e7dc;border-radius:14px;padding:10px 14px;font-size:17px;font-weight:700;color:var(--ink);box-shadow:0 2px 0 #d9e7dc}
+.chip.sel{border-color:var(--sun);background:var(--sun-l);transform:scale(1.06)}
+.baskets{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.basket{border-radius:16px;padding:12px 8px;min-height:150px;border:3px dashed;text-align:center;transition:transform .12s}
+.basket h3{margin:0 0 4px;font-size:18px}
+.basket small{display:block;color:var(--muted);font-size:13px;margin-bottom:8px}
+.basket .in{display:flex;flex-direction:column;gap:6px}
+.basket .in span{background:#fff;border-radius:10px;padding:5px;font-weight:700;font-size:15px}
+.b-p{background:var(--green-l);border-color:#9fd1b2}
+.b-c{background:var(--sun-l);border-color:#f3d48a}
+.b-d{background:var(--earth-l);border-color:#d5b6a2}
+.basket.pulse{transform:scale(1.04)}
+.basket.wrong{animation:shake .35s}
+
+/* Stage 5 fill blank */
+.blank{display:inline-block;min-width:110px;border-bottom:3px solid var(--sun);text-align:center;color:var(--green-d);padding:0 6px}
+.bank{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:12px}
+.bank button{background:var(--sky-l);border:2px solid #bcdcf2;color:var(--ink);font-size:17px;font-weight:700;padding:10px 16px;border-radius:14px}
+.bank button.used{opacity:.35;pointer-events:none}
+
+/* Stage end */
+.stage-end{text-align:center;padding:10px 0}
+.stage-end .big{font-size:48px}
+.got{font-size:20px;font-weight:800;color:var(--green-d)}
+
+/* Certificate */
+.cert{border:6px double var(--green);border-radius:22px;padding:26px 20px;text-align:center;background:
+  radial-gradient(circle at 10% 10%,#fff6df 0,transparent 35%),radial-gradient(circle at 90% 90%,#e7f6ec 0,transparent 35%),#fff}
+.cert h2{font-size:30px;color:var(--green-d)}
+.cert .who{font-size:30px;font-weight:800;color:var(--earth);margin:10px 0;border-bottom:2px dashed var(--sun);display:inline-block;padding:0 20px 4px}
+.cert p{font-size:18px;line-height:1.9;margin:6px 0}
+.cert .sign{display:flex;justify-content:space-between;margin-top:22px;font-size:16px;color:var(--muted);flex-wrap:wrap;gap:10px}
+.confetti{position:fixed;top:-20px;font-size:24px;pointer-events:none;animation:fall linear forwards;z-index:9}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg);opacity:.8}}
+footer{text-align:center;color:var(--muted);margin-top:26px;font-size:14px}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:12px;font-weight:700;z-index:10}
+
+@media (max-width:560px){
+  header.top h1{font-size:20px}
+  .match{grid-template-columns:1fr 1.4fr}
+  .tile{font-size:14px;padding:9px}
+  .tile.term{font-size:15px}
+  .baskets{grid-template-columns:1fr}
+  .basket{min-height:auto}
+  .cell{font-size:19px}
+}
+@media print{
+  body{background:#fff}
+  header.top,.progress,footer,.no-print,.card:not(#certCard){display:none!important}
+  #certCard{box-shadow:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="logo">🌿</div>
+  <div>
+    <h1>مستكشفات السلاسل الغذائية</h1>
+    <div class="meta">درس: السلاسل والشبكات الغذائية · العلوم · الصف السادس الابتدائي · <span id="teacherTop"></span></div>
+  </div>
+  <div class="stars">⭐ <span id="starCount">0</span> / 15</div>
+</header>
+
+<div class="progress" id="progress"><span></span><span></span><span></span><span></span><span></span></div>
+
+<!-- Intro -->
+<section class="card center" id="intro">
+  <div class="chain-art">☀️ ➜ 🌱 ➜ 🦗 ➜ 🐸 ➜ 🐍 ➜ 🦅</div>
+  <h2>كيف تنتقل الطاقة بين المخلوقات الحية؟</h2>
+  <p class="hint">مغامرة من ٥ محطات، في كل محطة تجمعين حتى ٣ نجوم. اجمعي ١٥ نجمة لتحصلي على شهادة المستكشفة المتميزة!</p>
+  <input class="name" id="nameInput" placeholder="اكتبي اسمك هنا" maxlength="30">
+  <div class="feedback bad" id="nameMsg"></div>
+  <button class="btn sun" id="startBtn">🚀 ابدئي المغامرة</button>
+</section>
+
+<!-- Stage 1 -->
+<section class="card hidden" id="s1">
+  <h2>المحطة ١: التوصيل 🔗</h2>
+  <p class="hint">اضغطي على المفهوم، ثم اضغطي على معناه الصحيح.</p>
+  <div class="match">
+    <div class="col" id="terms"></div>
+    <div class="col" id="defs"></div>
+  </div>
+  <div class="feedback" id="fb1"></div>
+</section>
+
+<!-- Stage 2 -->
+<section class="card hidden" id="s2">
+  <h2>المحطة ٢: البحث عن الكلمات 🔍</h2>
+  <p class="hint">اضغطي على الحرف الأول ثم الحرف الأخير للكلمة (أفقياً من اليمين لليسار، أو عمودياً من الأعلى للأسفل).</p>
+  <div class="ws-box">
+    <div class="grid" id="grid"></div>
+    <div class="words" id="wordList"></div>
+  </div>
+  <div class="feedback" id="fb2"></div>
+</section>
+
+<!-- Stage 3 -->
+<section class="card hidden" id="s3">
+  <h2>المحطة ٣: سباق النجوم ✔ ✘</h2>
+  <p class="hint">اقرئي العبارة واختاري: صح أم خطأ؟</p>
+  <div class="race"><span>🏁</span><div class="track"><i id="raceBar" style="width:0"></i></div><span>⭐</span></div>
+  <div class="muted" id="tfCount"></div>
+  <div class="q-big" id="tfText"></div>
+  <div class="tf">
+    <button class="t" id="tBtn">✔ صح</button>
+    <button class="f" id="fBtn">✘ خطأ</button>
+  </div>
+  <div class="feedback" id="fb3"></div>
+</section>
+
+<!-- Stage 4 -->
+<section class="card hidden" id="s4">
+  <h2>المحطة ٤: التصنيف 🧺</h2>
+  <p class="hint">اضغطي على البطاقة، ثم اضغطي على السلة المناسبة.</p>
+  <div class="pool" id="pool"></div>
+  <div class="baskets">
+    <div class="basket b-p" data-k="p"><h3>🌱 منتِج</h3><small>يصنع غذاءه بنفسه</small><div class="in"></div></div>
+    <div class="basket b-c" data-k="c"><h3>🐇 مستهلِك</h3><small>يتغذى على غيره</small><div class="in"></div></div>
+    <div class="basket b-d" data-k="d"><h3>🍄 محلِّل</h3><small>يحلل بقايا المخلوقات</small><div class="in"></div></div>
+  </div>
+  <div class="feedback" id="fb4"></div>
+</section>
+
+<!-- Stage 5 -->
+<section class="card hidden" id="s5">
+  <h2>المحطة ٥: أكملي الفراغ ✏️</h2>
+  <p class="hint">اختاري الكلمة المناسبة من بنك الكلمات.</p>
+  <div class="muted" id="fillCount"></div>
+  <div class="q-big" id="fillText"></div>
+  <div class="bank" id="bank"></div>
+  <div class="feedback" id="fb5"></div>
+</section>
+
+<!-- Stage end -->
+<section class="card hidden" id="stageEnd">
+  <div class="stage-end">
+    <div class="big" id="endEmoji">🎉</div>
+    <div class="got" id="endText"></div>
+    <p class="hint" id="endSub"></p>
+    <button class="btn" id="nextBtn">المحطة التالية ⬅</button>
+  </div>
+</section>
+
+<!-- Certificate -->
+<section class="card hidden" id="certCard">
+  <div class="cert">
+    <div style="font-size:44px">🏆</div>
+    <h2>شهادة شكر وتقدير</h2>
+    <p>تتقدم <span class="teacherName"></span> بالشكر والتقدير للطالبة المتميزة</p>
+    <div class="who" id="certName"></div>
+    <p>لإتمامها مغامرة <b>مستكشفات السلاسل الغذائية</b> بنجاح<br>وحصولها على <b id="certStars"></b> نجمة من ١٥ ⭐</p>
+    <p>متمنين لها دوام التفوق والنجاح 🌿</p>
+    <div class="sign">
+      <span>التاريخ: <span id="certDate"></span></span>
+      <span>المعلمة: <span class="teacherName"></span></span>
+    </div>
+  </div>
+  <div class="row no-print" style="justify-content:center;margin-top:16px">
+    <button class="btn sun" id="printBtn">🖨️ طباعة / حفظ الشهادة</button>
+    <button class="btn ghost" id="againBtn">🔄 العب مرة أخرى</button>
+  </div>
+</section>
+
+<footer>إعداد: <span class="teacherName"></span></footer>
+</div>
+
+<script>
+/* ===================== الإعدادات (عدّليها) ===================== */
+const TEACHER = "أ. ورد المحمادي";   // اكتبي اسم المعلمة هنا مثل: "أ. نورة ..."
+
+/* ===================== المحتوى ===================== */
+const MATCH = [
+  ["المنتِج", "مخلوق حي يصنع غذاءه بنفسه"],
+  ["المستهلِك", "مخلوق حي يحصل على غذائه بأكل مخلوقات حية أخرى"],
+  ["المحلِّل", "مخلوق يحلل بقايا المخلوقات الميتة ويعيد المواد إلى التربة"],
+  ["السلسلة الغذائية", "مسار انتقال الطاقة من مخلوق حي إلى آخر"],
+  ["الشبكة الغذائية", "مجموعة من السلاسل الغذائية المتداخلة والمترابطة"]
+];
+
+/* شبكة ٧×٧ — العمود ٠ هو الأيمن */
+const WS_WORDS = [
+  {w:"طاقة", r:0, c:0, d:"h"},
+  {w:"شمس",  r:2, c:2, d:"h"},
+  {w:"نبات", r:1, c:6, d:"v"},
+  {w:"فطر",  r:3, c:1, d:"v"},
+  {w:"صقر",  r:6, c:3, d:"h"}
+];
+const FILLER = "لكمدجحخهعغيبسظزوذرثضكلمنجدحعهبيسلمزور";
+
+const TF = [
+  ["النباتات مخلوقات منتِجة تصنع غذاءها بنفسها.", true],
+  ["الأسد من آكلات الأعشاب.", false],
+  ["الشمس هي المصدر الأساسي للطاقة في معظم السلاسل الغذائية.", true],
+  ["الفطريات والبكتيريا من المحلِّلات.", true],
+  ["تزداد كمية الطاقة كلما صعدنا إلى أعلى هرم الطاقة.", false],
+  ["تتكون الشبكة الغذائية من سلسلة غذائية واحدة فقط.", false]
+];
+
+const SORT = [
+  ["🌾 قمح","p"],["🌿 عشب","p"],["🟢 طحالب","p"],
+  ["🦗 جرادة","c"],["🐇 أرنب","c"],["🦁 أسد","c"],
+  ["🦠 بكتيريا","d"],["🍄 فطريات","d"],["🍞 عفن الخبز","d"]
+];
+
+const FILL = [
+  ["تحصل النباتات على الطاقة اللازمة لصنع غذائها من ___ .", "الشمس"],
+  ["الحيوان الذي يتغذى على النباتات فقط يسمى ___ .", "آكل أعشاب"],
+  ["الحيوان الذي يتغذى على الحيوانات الأخرى يسمى ___ .", "آكل لحوم"],
+  ["الحيوان الذي يتغذى على النباتات والحيوانات معاً يسمى ___ .", "قارِت"],
+  ["يوضح ___ كمية الطاقة المنتقلة في كل مستوى من مستويات السلسلة الغذائية.", "هرم الطاقة"],
+  ["في السلسلة: عشب ⬅ جرادة ⬅ ضفدع ⬅ ثعبان، يُعد الضفدع مستهلِكاً ___ .", "ثانياً"]
+];
+
+/* ===================== أدوات ===================== */
+const $ = id => document.getElementById(id);
+const shuffle = a => { a = a.slice(); for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+let player = "", stars = 0, stage = 0;
+let actx = null;
+function beep(good){
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.connect(g); g.connect(actx.destination);
+    o.type = "sine";
+    const t = actx.currentTime;
+    if(good){ o.frequency.setValueAtTime(660,t); o.frequency.setValueAtTime(880,t+.08); }
+    else { o.frequency.setValueAtTime(220,t); o.frequency.setValueAtTime(170,t+.1); }
+    g.gain.setValueAtTime(.12,t); g.gain.exponentialRampToValueAtTime(.001,t+.25);
+    o.start(t); o.stop(t+.26);
+  }catch(e){}
+}
+function say(el, msg, good){ el.textContent = msg; el.className = "feedback " + (good ? "ok" : "bad"); }
+function shake(el){ el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake"); }
+function confetti(n=40){
+  const icons=["⭐","🌿","🍃","🌼","☀️","🦋"];
+  for(let i=0;i<n;i++){
+    const s=document.createElement("div"); s.className="confetti";
+    s.textContent=icons[i%icons.length];
+    s.style.left=Math.random()*100+"vw";
+    s.style.animationDuration=(2+Math.random()*2.5)+"s";
+    s.style.animationDelay=(Math.random()*.6)+"s";
+    document.body.appendChild(s); setTimeout(()=>s.remove(),5200);
+  }
+}
+function toast(msg){ const t=document.createElement("div"); t.className="toast"; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2600); }
+
+function show(id){
+  ["intro","s1","s2","s3","s4","s5","stageEnd","certCard"].forEach(s=>$(s).classList.toggle("hidden", s!==id));
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function setProgress(){
+  [...$("progress").children].forEach((s,i)=>{ s.className = i < stage-1 ? "done" : (i===stage-1 ? "on" : ""); });
+}
+function addStars(n){ stars += n; $("starCount").textContent = stars; }
+
+const STAGE_NAMES = ["التوصيل","البحث عن الكلمات","سباق النجوم","التصنيف","أكملي الفراغ"];
+function finishStage(earned){
+  addStars(earned);
+  beep(true); confetti(earned*10+10);
+  $("endEmoji").textContent = earned===3 ? "🏆" : earned===2 ? "🎉" : "👍";
+  $("endText").textContent = `أحسنتِ يا ${player}! حصلتِ على ${"⭐".repeat(earned)} في محطة ${STAGE_NAMES[stage-1]}`;
+  $("endSub").textContent = earned===3 ? "أداء ممتاز، أنتِ مستكشفة حقيقية!" : "رائع! واصلي التقدّم.";
+  $("nextBtn").textContent = stage===5 ? "🏆 استلمي شهادتك" : "المحطة التالية ⬅";
+  stage < 5 ? null : null;
+  show("stageEnd");
+  const p=[...$("progress").children][stage-1]; if(p) p.className="done";
+}
+$("nextBtn").onclick = ()=>{ stage===5 ? showCert() : goStage(stage+1); };
+
+function goStage(n){
+  stage = n; setProgress();
+  ({1:initS1,2:initS2,3:initS3,4:initS4,5:initS5})[n]();
+  show("s"+n);
+}
+
+/* ===================== المحطة ١: التوصيل ===================== */
+let selTerm=null, s1Done=0, s1Err=0;
+function initS1(){
+  selTerm=null; s1Done=0; s1Err=0; $("fb1").textContent="";
+  const T=$("terms"), D=$("defs"); T.innerHTML=""; D.innerHTML="";
+  shuffle(MATCH.map((m,i)=>i)).forEach(i=>{
+    const b=document.createElement("button"); b.className="tile term"; b.textContent=MATCH[i][0]; b.dataset.i=i;
+    b.onclick=()=>{ T.querySelectorAll(".tile").forEach(x=>x.classList.remove("sel")); b.classList.add("sel"); selTerm=b; };
+    T.appendChild(b);
+  });
+  shuffle(MATCH.map((m,i)=>i)).forEach(i=>{
+    const b=document.createElement("button"); b.className="tile"; b.textContent=MATCH[i][1]; b.dataset.i=i;
+    b.onclick=()=>{
+      if(!selTerm){ say($("fb1"),"اختاري المفهوم أولاً 👈",false); shake(b); return; }
+      if(selTerm.dataset.i===b.dataset.i){
+        selTerm.classList.remove("sel"); selTerm.classList.add("done"); b.classList.add("done");
+        selTerm=null; s1Done++; beep(true); say($("fb1"),"إجابة صحيحة! ✔",true);
+        if(s1Done===MATCH.length) setTimeout(()=>finishStage(s1Err===0?3:s1Err<=2?2:1),600);
+      } else { s1Err++; beep(false); shake(b); shake(selTerm); say($("fb1"),"حاولي مرة أخرى 🤔",false); }
+    };
+    D.appendChild(b);
+  });
+}
+
+/* ===================== المحطة ٢: البحث عن الكلمات ===================== */
+let wsFirst=null, wsFound=0, wsErr=0;
+function cellsOf(o){ return [...o.w].map((ch,k)=> o.d==="h" ? [o.r,o.c+k] : [o.r+k,o.c]); }
+function initS2(){
+  wsFirst=null; wsFound=0; wsErr=0; $("fb2").textContent="";
+  const N=7, G=Array.from({length:N},()=>Array(N).fill(""));
+  WS_WORDS.forEach(o=>{ o.found=false; cellsOf(o).forEach(([r,c],k)=>G[r][c]=o.w[k]); });
+  let f=0; for(let r=0;r<N;r++) for(let c=0;c<N;c++) if(!G[r][c]) G[r][c]=FILLER[(f++)%FILLER.length];
+  const grid=$("grid"); grid.innerHTML="";
+  for(let r=0;r<N;r++) for(let c=0;c<N;c++){
+    const d=document.createElement("button"); d.className="cell"; d.textContent=G[r][c]; d.dataset.r=r; d.dataset.c=c;
+    d.onclick=()=>wsClick(d); grid.appendChild(d);
+  }
+  const L=$("wordList"); L.innerHTML="<b>ابحثي عن:</b>";
+  WS_WORDS.forEach((o,i)=>{ const s=document.createElement("div"); s.className="word"; s.id="w"+i; s.textContent=o.w; L.appendChild(s); });
+}
+function cellEl(r,c){ return $("grid").querySelector(`[data-r="${r}"][data-c="${c}"]`); }
+function wsClick(d){
+  if(!wsFirst){ wsFirst=d; d.classList.add("sel"); return; }
+  if(wsFirst===d){ d.classList.remove("sel"); wsFirst=null; return; }
+  const a=[+wsFirst.dataset.r,+wsFirst.dataset.c], b=[+d.dataset.r,+d.dataset.c];
+  const hit = WS_WORDS.findIndex(o=>{
+    if(o.found) return false;
+    const cs=cellsOf(o), s=cs[0], e=cs[cs.length-1];
+    return (s[0]===a[0]&&s[1]===a[1]&&e[0]===b[0]&&e[1]===b[1]) || (s[0]===b[0]&&s[1]===b[1]&&e[0]===a[0]&&e[1]===a[1]);
+  });
+  wsFirst.classList.remove("sel");
+  if(hit>=0){
+    const o=WS_WORDS[hit]; o.found=true; wsFound++;
+    cellsOf(o).forEach(([r,c])=>cellEl(r,c).classList.add("found"));
+    $("w"+hit).classList.add("found"); beep(true); say($("fb2"),`وجدتِ كلمة «${o.w}» 🎯`,true);
+    if(wsFound===WS_WORDS.length) setTimeout(()=>finishStage(wsErr<=1?3:wsErr<=4?2:1),700);
+  } else { wsErr++; beep(false); shake(d); say($("fb2"),"ليست كلمة صحيحة، جربي مرة أخرى",false); }
+  wsFirst=null;
+}
+
+/* ===================== المحطة ٣: صح أو خطأ ===================== */
+let tfList=[], tfI=0, tfOk=0;
+function initS3(){ tfList=shuffle(TF); tfI=0; tfOk=0; $("raceBar").style.width="0"; showTF(); }
+function showTF(){
+  $("fb3").textContent=""; $("tBtn").disabled=$("fBtn").disabled=false;
+  $("tfCount").textContent=`العبارة ${tfI+1} من ${tfList.length}`;
+  $("tfText").textContent=tfList[tfI][0];
+}
+function answerTF(v){
+  $("tBtn").disabled=$("fBtn").disabled=true;
+  const right = tfList[tfI][1]===v;
+  if(right){ tfOk++; beep(true); say($("fb3"),"إجابة صحيحة! ✔",true); }
+  else { beep(false); say($("fb3"),"إجابة خاطئة ✘ — العبارة " + (tfList[tfI][1]?"صحيحة":"خاطئة"),false); }
+  $("raceBar").style.width = (tfOk/tfList.length*100)+"%";
+  setTimeout(()=>{ tfI++; tfI<tfList.length ? showTF() : finishStage(tfOk>=6?3:tfOk>=4?2:1); }, 1300);
+}
+$("tBtn").onclick=()=>answerTF(true); $("fBtn").onclick=()=>answerTF(false);
+
+/* ===================== المحطة ٤: التصنيف ===================== */
+let selChip=null, sortLeft=0, sortErr=0;
+function initS4(){
+  selChip=null; sortErr=0; sortLeft=SORT.length; $("fb4").textContent="";
+  document.querySelectorAll(".basket .in").forEach(x=>x.innerHTML="");
+  const P=$("pool"); P.innerHTML="";
+  shuffle(SORT).forEach(([t,k])=>{
+    const b=document.createElement("button"); b.className="chip"; b.textContent=t; b.dataset.k=k;
+    b.onclick=()=>{ P.querySelectorAll(".chip").forEach(x=>x.classList.remove("sel")); b.classList.add("sel"); selChip=b; };
+    P.appendChild(b);
+  });
+}
+document.querySelectorAll(".basket").forEach(bk=>{
+  bk.onclick=()=>{
+    if(!selChip){ say($("fb4"),"اختاري بطاقة أولاً 👆",false); return; }
+    if(selChip.dataset.k===bk.dataset.k){
+      const s=document.createElement("span"); s.textContent=selChip.textContent; bk.querySelector(".in").appendChild(s);
+      selChip.remove(); selChip=null; sortLeft--; beep(true); say($("fb4"),"تصنيف صحيح! ✔",true);
+      bk.classList.add("pulse"); setTimeout(()=>bk.classList.remove("pulse"),200);
+      if(sortLeft===0) setTimeout(()=>finishStage(sortErr===0?3:sortErr<=2?2:1),600);
+    } else {
+      sortErr++; beep(false); bk.classList.remove("wrong"); void bk.offsetWidth; bk.classList.add("wrong");
+      say($("fb4"),"ليست السلة المناسبة، فكّري مرة أخرى 🤔",false);
+    }
+  };
+});
+
+/* ===================== المحطة ٥: أكملي الفراغ ===================== */
+let fillList=[], fillI=0, fillOk=0, fillTried=false;
+function initS5(){
+  fillList=shuffle(FILL); fillI=0; fillOk=0;
+  const B=$("bank"); B.innerHTML="";
+  shuffle(FILL.map(f=>f[1])).forEach(w=>{
+    const b=document.createElement("button"); b.textContent=w; b.onclick=()=>answerFill(b); B.appendChild(b);
+  });
+  showFill();
+}
+function showFill(){
+  fillTried=false; $("fb5").textContent="";
+  $("fillCount").textContent=`الجملة ${fillI+1} من ${fillList.length}`;
+  $("fillText").innerHTML = fillList[fillI][0].replace("___",'<span class="blank" id="blank">؟</span>');
+}
+function answerFill(b){
+  const ans=fillList[fillI][1];
+  if(b.textContent===ans){
+    if(!fillTried) fillOk++;
+    $("blank").textContent=ans; b.classList.add("used"); beep(true); say($("fb5"),"إجابة صحيحة! ✔",true);
+    setTimeout(()=>{ fillI++; fillI<fillList.length ? showFill() : finishStage(fillOk>=6?3:fillOk>=4?2:1); },1100);
+  } else { fillTried=true; beep(false); shake(b); say($("fb5"),"حاولي مرة أخرى 🤔",false); }
+}
+
+/* ===================== البداية والشهادة ===================== */
+$("startBtn").onclick=()=>{
+  const n=$("nameInput").value.trim();
+  if(!n){ $("nameMsg").textContent="اكتبي اسمك أولاً ✏️"; $("nameInput").focus(); return; }
+  player=n; stars=0; $("starCount").textContent=0; goStage(1);
+};
+$("nameInput").addEventListener("keydown",e=>{ if(e.key==="Enter") $("startBtn").click(); });
+
+function showCert(){
+  stage=6; [...$("progress").children].forEach(s=>s.className="done");
+  $("certName").textContent=player; $("certStars").textContent=stars;
+  const d=new Date();
+  try{ $("certDate").textContent = d.toLocaleDateString("ar-SA-u-ca-islamic-umalqura",{year:"numeric",month:"long",day:"numeric"}) + " هـ"; }
+  catch(e){ $("certDate").textContent = d.toLocaleDateString("ar"); }
+  show("certCard"); confetti(70);
+}
+$("printBtn").onclick=()=>{ try{ window.print(); }catch(e){} setTimeout(()=>toast("إذا لم تظهر نافذة الطباعة، افتحي اللعبة من رابط GitHub أو خذي لقطة شاشة 📸"),400); };
+$("againBtn").onclick=()=>{ stage=0; stars=0; $("starCount").textContent=0; setProgress(); $("nameInput").value=player; show("intro"); };
+
+document.querySelectorAll("#teacherTop,.teacherName").forEach(e=>e.textContent=TEACHER);
+setProgress();
+</script>
+</body>
+</html>
